@@ -13,7 +13,7 @@ class FiltersMod(loader.Module):
         self.db = db
 
     async def filtercmd(self, message):
-        """Добавить фильтр в список.\nСделан @caesar_do_not_touch исключительно для @caesar_do_not_touch"""
+        """Добавить фильтр в список.\nИзменен пользователем @caesar_do_not_touch."""
         filters = self.db.get("Filters", "filters", {})
         key = utils.get_args_raw(message) # .lower()
         reply = await message.get_reply_message() 
