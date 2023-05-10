@@ -25,7 +25,7 @@ class AutoBanMod(loader.Module):
             return
         if args == "list":
             if not users:
-                message = await urils.answer(message, "Список пуст")
+                message = await utils.answer(message, "Список пуст")
                 return
             msg = ""
             for _ in users:
