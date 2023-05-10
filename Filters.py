@@ -6,14 +6,14 @@ from .. import loader, utils
 
 @loader.tds
 class FiltersMod(loader.Module):
-    """Фильтры"""
+    """Фильтры\nИзменен пользователем @caesar_do_not_touch."""
     strings = {"name": "Filters"}
 
     async def client_ready(self, client, db):
         self.db = db
 
     async def filtercmd(self, message):
-        """Добавить фильтр в список.\nИзменен пользователем @caesar_do_not_touch."""
+        """Добавить фильтр в список."""
         filters = self.db.get("Filters", "filters", {})
         key = utils.get_args_raw(message) # .lower()
         reply = await message.get_reply_message() 
