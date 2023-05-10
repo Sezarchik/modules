@@ -7,7 +7,7 @@ from telethon.tl.functions.channels import EditBannedRequest
 
 @loader.tds
 class AutoBanMod(loader.Module):
-    """АвтоБан"""
+    """АвтоБан.\nИзменен пользователем @caesar_do_not_touch."""
     strings = {'name': 'AutoBan'}
 
     async def client_ready(self, client: TelegramClient, db):
