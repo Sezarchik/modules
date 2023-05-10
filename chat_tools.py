@@ -144,7 +144,7 @@ class ChatMod(loader.Module):
         except YouBlockedUserError:
             m = "<b>Вы заблокировали этого пользователя.</b>"
         except UnboundLocalError:
-            m = " b>Да, трэш.</b>"
+            m = "<b>Фигня случилось, повтори.</b>"
         except Exception as e:
             m = str(e)
         await message.reply(m)
