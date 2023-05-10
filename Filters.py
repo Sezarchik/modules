@@ -6,7 +6,7 @@ from .. import loader, utils
 
 @loader.tds
 class FiltersMod(loader.Module):
-    """Фильтры"""
+    """Фильтры\nИзменен пользователем @caesar_do_not_touch."""
     strings = {"name": "Filters"}
 
     async def client_ready(self, client, db):
