@@ -10,7 +10,7 @@ import re, asyncio, os
 chat = "@SaveOFFbot"
 
 class TTsaveMod(loader.Module):
-    """Save tiktok video"""
+    """Save tiktok video.\nModify by @caesar_do_not_touch"""
     strings = {'name': 'TTsaveMod'}    
     async def client_ready(self, client, db):
         self.db = db
