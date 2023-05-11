@@ -42,6 +42,9 @@ class ValuteMod(loader.Module):
             except YouBlockedUserError:
                 await utils.answer(message, "<b>Убери из ЧС:</b> " + chat)
                 return
+            except TimeoutError:
+                await utils.answer(message, "<b>Таймаут, брад.</b>")
+                return
             await bot_send_message.delete()
             await utils.answer(message, response.text)
             await bot_response.delete()
