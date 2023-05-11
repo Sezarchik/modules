@@ -16,7 +16,7 @@ class TTsaveMod(loader.Module):
         self.db = db
    
     async def ttsavecmd(self, message):
-        """ - используй {self.get_prefix()}ttsave <ссылка>"""
+        """ - используй .ttsave <ссылка>"""
 
         args = utils.get_args_raw(message)
         if args != re.findall(r'((?:https?://)?vm\.tiktok\.com/[A-Za-z0-9_]+/?|(?:https?://)?vt\.tiktok\.com/[A-Za-z0-9_]+/?)', message.raw_text):
@@ -43,7 +43,7 @@ class TTsaveMod(loader.Module):
             except: pass
 
     async def ttacceptcmd(self, message):
-        """ - используй {self.get_prefix()}ttaccept <reply/id> для открытия в чате автоматического скачивания ссылок. без аргументов тоже работает.\n{self.get_prefix()}ttaccept -l для показа открытых чатов """
+        """ - используй .ttaccept <reply/id> для открытия в чате автоматического скачивания ссылок.\nбез аргументов тоже работает.\n.ttaccept -l для показа открытых чатов """
 
         args = utils.get_args_raw(message)
         reply = await message.get_reply_message()
