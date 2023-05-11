@@ -21,25 +21,26 @@ class TTsaveMod(loader.Module):
         args = utils.get_args_raw(message)
         if args != re.findall(r'((?:https?://)?vm\.tiktok\.com/[A-Za-z0-9_]+/?|(?:https?://)?vt\.tiktok\.com/[A-Za-z0-9_]+/?)', message.raw_text):
             await utils.answer(message, "<b>ты ввел не ссылку, а хуйню реально.</b>")
-        async with message.client.conversation(chat) as conv:
-            try:
-                await utils.answer(message, '<code>Скачиваю...</code>')
-                response1, response2, response3 = [conv.wait_event(events.NewMessage(incoming=True, from_users=chat, chats=chat)) for i in range(3)]
-                bot_send_link = await message.client.send_message(chat, args)
-                response1 = await response1
-                response2 = await response2
-                response3 = await response3
-                await response2.download_media("hui.mp4")
-                await message.client.send_file(message.to_id, "hui.mp4")
-                await response1.delete()
-                await response2.delete()
-                await response3.delete()
-                await bot_send_link.delete()
-                await message.delete()
-                os.remove("hui.mp4")
-            except TimeoutError:
-                await utils.answer(message, "<b>Таймаут, брад.</b>")
-            except: pass
+        else:
+            async with message.client.conversation(chat) as conv:
+                try:
+                    await utils.answer(message, '<code>Скачиваю...</code>')
+                    response1, response2, response3 = [conv.wait_event(events.NewMessage(incoming=True, from_users=chat, chats=chat)) for i in range(3)]
+                    bot_send_link = await message.client.send_message(chat, args)
+                    response1 = await response1
+                    response2 = await response2
+                    response3 = await response3
+                    await response2.download_media("hui.mp4")
+                    await message.client.send_file(message.to_id, "hui.mp4")
+                    await response1.delete()
+                    await response2.delete()
+                    await response3.delete()
+                    await bot_send_link.delete()
+                    await message.delete()
+                    os.remove("hui.mp4")
+                except TimeoutError:
+                    await utils.answer(message, "<b>Таймаут, брад.</b>")
+                except: pass
 
     async def ttacceptcmd(self, message):
         """ - используй .ttaccept <reply/id> для открытия в чате автоматического скачивания ссылок.\nбез аргументов тоже работает.\n.ttaccept -l для показа открытых чатов """
