@@ -8,7 +8,7 @@
 
 
 import asyncio
-
+from asyncio.exceptions import TimeoutError
 from telethon import events
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 
