@@ -46,19 +46,21 @@ class ChatMod(loader.Module):
 
     async def useridcmd(self, message):
         """Команда .userid <@ или реплай> показывает ID выбранного пользователя."""
-        args = utils.get_args_raw(message)
-        reply = await message.get_reply_message()
-
-        try:
-            if args:
-                user = await message.client.get_entity(args if not args.isdigit() else int(args))
-            else:
-                user = await message.client.get_entity(reply.sender_id)
-        except ValueError:
-            user = await message.client.get_entity(message.sender_id)
-            
-        message = await utils.answer(message, f"<b>Имя:</b> <code>{user.first_name}</code>\n"
-                                              f"<b>ID:</b> <code>{user.id}</code>")
+        if message.is_reply:
+            full = await message.client(
+                GetFullUserRequest((await message.get_reply_message()).from_id)
+            )
+        else:
+            args = utils.get_args(message)
+            try:
+                full = await message.client(GetFullUserRequest(args[0]))
+            except:
+                full = await message.client(GetFullUserRequest(message.from_id))
+        info = (
+            f"<b>Имя:</b> <code>{full.user.first_name}</code>\n"
+            f"<b>ID:</b> <code>{full.user.id}</code>"
+        )
+        await utils.answer(message, info)
 
 
     async def chatidcmd(self, message):
