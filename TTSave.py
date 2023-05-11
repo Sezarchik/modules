@@ -19,10 +19,10 @@ class TTsaveMod(loader.Module):
         """ - используй .ttsave <ссылка>"""
 
         args = utils.get_args_raw(message)
-        if args != re.findall(r'((?:https?://)?vm\.tiktok\.com/[A-Za-z0-9_]+/?|(?:https?://)?vt\.tiktok\.com/[A-Za-z0-9_]+/?)', message.raw_text):
-            await utils.answer(message, "<b>ты ввел не ссылку, а хуйню реально.</b>")
-        elif args == re.findall(r'((?:https?://)?vm\.tiktok\.com/[A-Za-z0-9_]+/?|(?:https?://)?vt\.tiktok\.com/[A-Za-z0-9_]+/?)', message.raw_text):
-            async with message.client.conversation(chat) as conv:
+        async with message.client.conversation(chat) as conv:
+            if args != re.findall(r'((?:https?://)?vm\.tiktok\.com/[A-Za-z0-9_]+/?|(?:https?://)?vt\.tiktok\.com/[A-Za-z0-9_]+/?)', message.raw_text):
+                await utils.answer(message, "<b>ты ввел не ссылку, а хуйню реально.</b>")
+            else:
                 try:
                     await utils.answer(message, '<code>Скачиваю...</code>')
                     response1, response2, response3 = [conv.wait_event(events.NewMessage(incoming=True, from_users=chat, chats=chat)) for i in range(3)]
