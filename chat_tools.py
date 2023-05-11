@@ -61,7 +61,7 @@ class ChatMod(loader.Module):
         except ValueError:
             user = await message.client.get_entity(message.sender_id)
 
-        await utils.answer(message, 
+        await message.edit(
             f"<b>Имя:</b> <code>{user.first_name}</code>\n"
             f"<b>ID:</b> <code>{user.id}</code>"
         )
