@@ -35,8 +35,7 @@ class SaverMod(loader.Module):
     async def бляcmd(self, m: types.Message):
         ".бля <reply> - скачать самоуничтожающееся фото"
         reply = await m.get_reply_message()
-        unsupported = await m.MessageMediaUnsupported()
-        if not reply or not reply.media or not reply.media.ttl_seconds or not unsupported:
+        if not reply or not reply.media or not reply.media.ttl_seconds:
             return await m.edit("бля")
         await m.delete()
         new = io.BytesIO(await reply.download_media(bytes))
