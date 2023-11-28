@@ -31,7 +31,7 @@ class SaverMod(loader.Module):
     async def client_ready(self, client, db):
         self.db = db
 
-    @loader.owner
+    @loader.unrestricted
     async def бляcmd(self, m: types.Message):
         ".бля <reply> - скачать самоуничтожающееся фото"
         reply = await m.get_reply_message()
@@ -42,7 +42,7 @@ class SaverMod(loader.Module):
         new.name = reply.file.name
         await m.client.send_file("me", new)
 
-    @loader.owner
+    @loader.unrestricted
     async def swбляcmd(self, m: types.Message):
         "Переключить режим автозагрузки фото в лс"
         new_val = not self.db.get("Saver", "state", False)
@@ -50,6 +50,7 @@ class SaverMod(loader.Module):
         await utils.answer(m, f"<b>[Saver]</b> <pre>{new_val}</pre>")
 
     async def watcher(self, m: types.Message):
+        media = reply.media
         if (
             m
             and m.media
