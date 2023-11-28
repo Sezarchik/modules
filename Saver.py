@@ -50,7 +50,6 @@ class SaverMod(loader.Module):
         await utils.answer(m, f"<b>[Saver]</b> <pre>{new_val}</pre>")
 
     async def watcher(self, m: types.Message):
-        media = reply.media
         if (
             m
             and m.media
