@@ -23,10 +23,9 @@ __version__ = (0, 0, 2)
 
 import random
 from .. import loader, utils
-from datetime import timedelta
+from datetime import timedelta, datetime
 from telethon import functions
 from telethon.tl.types import Message
-
 
 @loader.tds
 class FarmIrisMod(loader.Module):
@@ -56,8 +55,9 @@ class FarmIrisMod(loader.Module):
             message = await utils.answer(message, self.strings["farmon_already"])
             return
         self.db.set(self.name, "status", True)
+        peer = await self.client.get_input_entity(self.iris)
         await self.client.send_message(
-            self.iris, "Фарма", schedule=timedelta(seconds=20)
+            peer, "Фарма", schedule=datetime.now() + timedelta(seconds=20)
         )
         message = await utils.answer(message, self.strings["farmon"])
 
@@ -83,36 +83,37 @@ class FarmIrisMod(loader.Module):
         status = self.db.get(self.name, "status", False)
         if not status:
             return
+        peer = await self.client.get_input_entity(self.iris)
+
         if event.raw_text == "Фарма":
             return await self.client.send_message(
-                self.iris, "Фарма", schedule=timedelta(minutes=random.randint(1, 20))
+                peer, "Фарма", schedule=datetime.now() + timedelta(minutes=random.randint(1, 20))
             )
+
         if event.sender_id != self.iris:
             return
+
         if "НЕЗАЧЁТ!" in event.raw_text:
             args = [int(x) for x in event.raw_text.split() if x.isnumeric()]
             randelta = random.randint(20, 60)
             if len(args) == 4:
-                delta = timedelta(
-                    hours=args[1], minutes=args[2], seconds=args[3] + randelta
-                )
+                delta = timedelta(hours=args[1], minutes=args[2], seconds=args[3] + randelta)
             elif len(args) == 3:
                 delta = timedelta(minutes=args[1], seconds=args[2] + randelta)
             elif len(args) == 2:
                 delta = timedelta(seconds=args[1] + randelta)
             else:
                 return
-            sch = (
+
+            sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer))).messages
+            if sch:
                 await self.client(
-                    functions.messages.GetScheduledHistoryRequest(self.iris, 1488)
+                    functions.messages.DeleteScheduledMessagesRequest(peer=peer, id=[x.id for x in sch])
                 )
-            ).messages
-            await self.client(
-                functions.messages.DeleteScheduledMessagesRequest(
-                    self.iris, id=[x.id for x in sch]
-                )
-            )
-            return await self.client.send_message(self.iris, "Фарма", schedule=delta)
+
+            schedule_time = datetime.now() + delta
+            return await self.client.send_message(peer, "Фарма", schedule=schedule_time)
+
         if "ЗАЧЁТ" in event.raw_text or "УДАЧА" in event.raw_text:
             args = event.raw_text.split()
             for x in args:
@@ -158,3 +159,4 @@ class FarmIrisMod(loader.Module):
 
         if not args:
             await utils.answer(message, bags.text)
+
