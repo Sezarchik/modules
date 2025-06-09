@@ -115,7 +115,7 @@ class FarmIrisMod(loader.Module):
             schedule_time = datetime.now() + delta
 
             try:
-                sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer))).messages
+                sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer=peer, hash=0))).messages
                 await self.client.send_message("me", f"🗑 Найдено отложенных сообщений: {len(sch)}")
                 if sch:
                     await self.client(
