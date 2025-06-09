@@ -87,7 +87,6 @@ class FarmIrisMod(loader.Module):
         peer = await self.client.get_input_entity(self.iris)
 
         if event.raw_text == "Фарма":
-            await self.client.send_message("me", "▶️ Фарма сработала повторно, откладываем заново")
             return await self.client.send_message(
                 peer, "Фарма", schedule=datetime.now() + timedelta(minutes=random.randint(1, 20))
             )
@@ -96,15 +95,11 @@ class FarmIrisMod(loader.Module):
             return
 
         if "НЕЗАЧЁТ!" in event.raw_text:
-            await self.client.send_message("me", f"⚠️ Обнаружен НЕЗАЧЁТ! Текст: {event.raw_text}")
-
             match = re.search(r"через ([^\n]+)", event.raw_text.lower())
             if not match:
-                await self.client.send_message("me", "❌ Не удалось найти часть 'через ...'")
                 return
 
             time_str = match.group(1)
-            await self.client.send_message("me", f"⏱ Парсим строку времени: {time_str}")
 
             hours = minutes = seconds = 0
 
@@ -126,16 +121,14 @@ class FarmIrisMod(loader.Module):
 
             try:
                 sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer=peer, hash=0))).messages
-                await self.client.send_message("me", f"🗑 Найдено отложенных сообщений: {len(sch)}")
                 if sch:
                     await self.client(
                         functions.messages.DeleteScheduledMessagesRequest(peer=peer, id=[x.id for x in sch])
                     )
-            except Exception as e:
-                await self.client.send_message("me", f"⚠️ Ошибка при удалении отложек: {e}")
+            except Exception:
+                pass
 
             schedule_time = datetime.now() + delta
-            await self.client.send_message("me", f"📆 Планируем фарму через: {delta}")
             return await self.client.send_message(peer, "Фарма", schedule=schedule_time)
 
         if "ЗАЧЁТ" in event.raw_text or "УДАЧА" in event.raw_text:
@@ -145,7 +138,6 @@ class FarmIrisMod(loader.Module):
                     coins = int(x[1:])
                     total = self.db.get(self.name, "coins", 0) + coins
                     self.db.set(self.name, "coins", total)
-                    await self.client.send_message("me", f"💰 Зачёт! Добавлено: {coins} i¢ | Всего: {total} i¢")
                     return
 
     async def message_q(
