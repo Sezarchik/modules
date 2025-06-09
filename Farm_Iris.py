@@ -22,6 +22,7 @@ __version__ = (0, 0, 2)
 # meta pic: https://te.legra.ph/file/98192f1f7953275baead5.jpg
 
 import random
+import re
 from .. import loader, utils
 from datetime import timedelta, datetime
 from telethon import functions
@@ -96,23 +97,32 @@ class FarmIrisMod(loader.Module):
 
         if "НЕЗАЧЁТ!" in event.raw_text:
             await self.client.send_message("me", f"⚠️ Обнаружен НЕЗАЧЁТ! Текст: {event.raw_text}")
-            args = [int(x) for x in event.raw_text.split() if x.isnumeric()]
-            randelta = random.randint(20, 60)
-            try:
-                if len(args) == 4:
-                    delta = timedelta(hours=args[1], minutes=args[2], seconds=args[3] + randelta)
-                elif len(args) == 3:
-                    delta = timedelta(minutes=args[1], seconds=args[2] + randelta)
-                elif len(args) == 2:
-                    delta = timedelta(seconds=args[1] + randelta)
-                else:
-                    await self.client.send_message("me", f"❌ Не удалось определить время. Аргументы: {args}")
-                    return
-            except Exception as e:
-                await self.client.send_message("me", f"💥 Ошибка при парсинге времени: {e}")
+
+            match = re.search(r"через ([^\n]+)", event.raw_text.lower())
+            if not match:
+                await self.client.send_message("me", "❌ Не удалось найти часть 'через ...'")
                 return
 
-            schedule_time = datetime.now() + delta
+            time_str = match.group(1)
+            await self.client.send_message("me", f"⏱ Парсим строку времени: {time_str}")
+
+            hours = minutes = seconds = 0
+
+            if 'час' in time_str:
+                match = re.search(r"(\d+)\s*час", time_str)
+                if match:
+                    hours = int(match.group(1))
+            if 'мин' in time_str:
+                match = re.search(r"(\d+)\s*мин", time_str)
+                if match:
+                    minutes = int(match.group(1))
+            if 'сек' in time_str:
+                match = re.search(r"(\d+)\s*сек", time_str)
+                if match:
+                    seconds = int(match.group(1))
+
+            randelta = random.randint(20, 60)
+            delta = timedelta(hours=hours, minutes=minutes, seconds=seconds + randelta)
 
             try:
                 sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer=peer, hash=0))).messages
@@ -124,6 +134,7 @@ class FarmIrisMod(loader.Module):
             except Exception as e:
                 await self.client.send_message("me", f"⚠️ Ошибка при удалении отложек: {e}")
 
+            schedule_time = datetime.now() + delta
             await self.client.send_message("me", f"📆 Планируем фарму через: {delta}")
             return await self.client.send_message(peer, "Фарма", schedule=schedule_time)
 
