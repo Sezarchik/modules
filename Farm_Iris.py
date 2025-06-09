@@ -86,6 +86,7 @@ class FarmIrisMod(loader.Module):
         peer = await self.client.get_input_entity(self.iris)
 
         if event.raw_text == "Фарма":
+            await self.client.send_message("me", "▶️ Фарма сработала повторно, откладываем заново")
             return await self.client.send_message(
                 peer, "Фарма", schedule=datetime.now() + timedelta(minutes=random.randint(1, 20))
             )
@@ -94,35 +95,47 @@ class FarmIrisMod(loader.Module):
             return
 
         if "НЕЗАЧЁТ!" in event.raw_text:
+            await self.client.send_message("me", f"⚠️ Обнаружен НЕЗАЧЁТ! Текст: {event.raw_text}")
             args = [int(x) for x in event.raw_text.split() if x.isnumeric()]
             randelta = random.randint(20, 60)
-            if len(args) == 4:
-                delta = timedelta(hours=args[1], minutes=args[2], seconds=args[3] + randelta)
-            elif len(args) == 3:
-                delta = timedelta(minutes=args[1], seconds=args[2] + randelta)
-            elif len(args) == 2:
-                delta = timedelta(seconds=args[1] + randelta)
-            else:
+            try:
+                if len(args) == 4:
+                    delta = timedelta(hours=args[1], minutes=args[2], seconds=args[3] + randelta)
+                elif len(args) == 3:
+                    delta = timedelta(minutes=args[1], seconds=args[2] + randelta)
+                elif len(args) == 2:
+                    delta = timedelta(seconds=args[1] + randelta)
+                else:
+                    await self.client.send_message("me", f"❌ Не удалось определить время. Аргументы: {args}")
+                    return
+            except Exception as e:
+                await self.client.send_message("me", f"💥 Ошибка при парсинге времени: {e}")
                 return
 
-            sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer))).messages
-            if sch:
-                await self.client(
-                    functions.messages.DeleteScheduledMessagesRequest(peer=peer, id=[x.id for x in sch])
-                )
-
             schedule_time = datetime.now() + delta
+
+            try:
+                sch = (await self.client(functions.messages.GetScheduledHistoryRequest(peer))).messages
+                await self.client.send_message("me", f"🗑 Найдено отложенных сообщений: {len(sch)}")
+                if sch:
+                    await self.client(
+                        functions.messages.DeleteScheduledMessagesRequest(peer=peer, id=[x.id for x in sch])
+                    )
+            except Exception as e:
+                await self.client.send_message("me", f"⚠️ Ошибка при удалении отложек: {e}")
+
+            await self.client.send_message("me", f"📆 Планируем фарму через: {delta}")
             return await self.client.send_message(peer, "Фарма", schedule=schedule_time)
 
         if "ЗАЧЁТ" in event.raw_text or "УДАЧА" in event.raw_text:
             args = event.raw_text.split()
             for x in args:
                 if x[0] == "+":
-                    return self.db.set(
-                        self.name,
-                        "coins",
-                        self.db.get(self.name, "coins", 0) + int(x[1:]),
-                    )
+                    coins = int(x[1:])
+                    total = self.db.get(self.name, "coins", 0) + coins
+                    self.db.set(self.name, "coins", total)
+                    await self.client.send_message("me", f"💰 Зачёт! Добавлено: {coins} i¢ | Всего: {total} i¢")
+                    return
 
     async def message_q(
         self,
@@ -159,4 +172,3 @@ class FarmIrisMod(loader.Module):
 
         if not args:
             await utils.answer(message, bags.text)
-
