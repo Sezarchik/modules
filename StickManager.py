@@ -1159,6 +1159,16 @@ class StickManagerMod(loader.Module):
                 continue
 
         self.db.set(self.__class__.__name__, "packs", packs)
+
+        # 🔄 Обновляем stickersets кэшем, чтобы .packs показала актуальные имена
+        self.stickersets.clear()
+        for pack in packs:
+            emoji = random.choice(self.emojies) if len(self.stickersets) >= len(self.emojies) else self.emojies[len(self.stickersets) + 1]
+            self.stickersets[pack["short_name"]] = {
+                "title": pack["title"],
+                "emoji": emoji,
+                "alias": None
+            }
         await utils.answer(message, f"🔄 Стикерпаки синхронизированы! Найдено: {len(packs)} паков")
 
     # ❌ Старый метод syncpacks через @stickers переименован для сохранности
