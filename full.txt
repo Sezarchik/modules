@@ -9,3 +9,4 @@ TTSave
 Saver
 KeyboardSwitcher
 StickManager
+Notes
