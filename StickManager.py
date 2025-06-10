@@ -1214,7 +1214,7 @@ class StickManagerMod(loader.Module):
         hi_doc="उपलब्ध स्टिकर सेट्स दिखाएं",
     )
     async def packscmd(self, message):
-        """Short available stickersets"""
+        """Показывает список доступных стикерпаков через @stickers"""
         from telethon.tl.functions.messages import GetStickerSetRequest
         from telethon.tl.types import InputStickerSetShortName
 
@@ -1231,13 +1231,16 @@ class StickManagerMod(loader.Module):
         if not self.stickersets:
             return await utils.answer(message, "🚫 У тебя нет стикерпаков")
 
-        text = "📦 <b>Твои стикерпаки:</b>\n\n"
+        text = "👨‍🎤 <b>Активные стикерпаки:</b>
+
+"
         for shortname, info in self.stickersets.items():
             title = info.get("title") or shortname
             emoji = info.get("emoji", "📦")
             alias = f" ({info['alias']})" if info.get("alias") else ""
             url = f"https://t.me/addstickers/{shortname}"
-            text += f"{emoji} <b>{title}</b> — <a href='{url}'>ссылка</a>{alias}\n"
+            text += f"{emoji} {title} <a href='{url}'>add</a> (<code>{shortname}</code>){alias}
+"
 
         await utils.answer(message, text)
 
