@@ -76,21 +76,18 @@ class NotesMod(loader.Module):
             self.del_note(args[0])
             await utils.answer(message, self.strings("no_note", message))
             return
+    
         await message.delete()
+    
+        reply = await message.get_reply_message()
+    
+        kwargs = {"reply_to": reply.id} if reply else {}
+    
         await message.client.send_message(
-            message.chat.id,
+            message.peer_id,
             asset,
-            reply_to=await message.get_reply_message(),
+            **kwargs,
         )
-
-    async def delallnotescmd(self, message):
-        """Deletes all the saved notes"""
-        notes = self._db.get("friendly-telegram.modules.notes", "notes", {})
-        if not notes:
-            await utils.answer(message, self.strings("delnotes_none", message))
-            return
-        notes.clear()
-        await utils.answer(message, self.strings("delnotes_done", message))
 
     async def savecmd(self, message):
         """Save a new note. Must be used in reply with one parameter (note name)"""
