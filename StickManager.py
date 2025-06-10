@@ -1213,11 +1213,10 @@ class StickManagerMod(loader.Module):
         tr_doc="Mevcut sticker paketlerini göster",
         hi_doc="उपलब्ध स्टिकर सेट्स दिखाएं",
     )
-    async def packscmd(self, message):
-        """Показывает список доступных стикерпаков через @stickers"""
-        from telethon.tl.functions.messages import GetStickerSetRequest
-        from telethon.tl.types import InputStickerSetShortName
-
+    async def packs(self, message: Message):
+        """Short available stickersets"""
+    
+        # 🔄 Восстановим stickersets из базы, если он пуст
         if not self.stickersets:
             packs = self.db.get(self.__class__.__name__, "packs", [])
             for pack in packs:
@@ -1227,22 +1226,24 @@ class StickManagerMod(loader.Module):
                     "emoji": emoji,
                     "alias": None
                 }
-
+    
         if not self.stickersets:
-            return await utils.answer(message, "🚫 У тебя нет стикерпаков")
-
-        text = "👨‍🎤 <b>Активные стикерпаки:</b>
-
-"
+            await utils.answer(message, "🚫 У тебя нет стикерпаков")
+            return
+    
+        res = "👨‍🎤 <b>Активные стикерпаки:</b>\n\n"
         for shortname, info in self.stickersets.items():
-            title = info.get("title") or shortname
-            emoji = info.get("emoji", "📦")
-            alias = f" ({info['alias']})" if info.get("alias") else ""
-            url = f"https://t.me/addstickers/{shortname}"
-            text += f"{emoji} {title} <a href='{url}'>add</a> (<code>{shortname}</code>){alias}
-"
-
-        await utils.answer(message, text)
+            alias = (
+                f' (<code>{utils.escape_html(info["alias"])}</code>)'
+                if info["alias"]
+                else f" (<code>{utils.escape_html(shortname)}</code>)"
+            )
+            res += (
+                f"{info['emoji']} <b>{utils.escape_html(info['title'])}</b> "
+                f"<a href=\"https://t.me/addstickers/{shortname}\">add</a>{alias}\n"
+            )
+    
+        await utils.answer(message, res)
 
     @loader.command(
         ru_doc="<алиас> [short_name] - Добавить или удалить алиас",
