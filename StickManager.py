@@ -1139,103 +1139,73 @@ class StickManagerMod(loader.Module):
         hi_doc="स्टिकर सेट्स को @stickers से सिंक्रनाइज़ करें",
     )
     async def syncpackscmd(self, message):
-        """Синхронизирует список доступных стикерпаков напрямую через Telegram API"""
-        from telethon.tl.functions.messages import GetAllStickersRequest, GetStickerSetRequest
-        from telethon.tl.types import InputStickerSetShortName
+    """Синхронизация стикерпаков через @stickers командой /packstats"""
+    from telethon.tl.functions.messages import GetStickerSetRequest
+    from telethon.tl.types import InputStickerSetShortName
+    import time
 
-        res = await self._client(GetAllStickersRequest(0))
+    q = 0
+    message = await utils.answer(message, "🔄 Синхронизация через @stickers...")
+
+    async with self._client.conversation("@stickers") as conv:
+        m = await conv.send_message("/cancel")
+        r = await conv.get_response()
+        await m.delete()
+        await r.delete()
+
+        m = await conv.send_message("/packstats")
+        r = await conv.get_response()
+
         packs = []
+        for row in [
+            [btn.text for btn in row.buttons] for row in r.reply_markup.rows
+        ]:
+            for btn in row:
+                packs += [btn]
+                if btn in self.stickersets:
+                    continue
 
-        for pack in res.sets:
-            try:
-                full = await self._client(GetStickerSetRequest(InputStickerSetShortName(pack.short_name)))
-                packs.append({
-                    "id": pack.id,
-                    "access_hash": pack.access_hash,
-                    "short_name": pack.short_name,
-                    "title": full.set.title  # актуальное имя
-                })
-            except Exception:
-                continue
-
-        self.db.set(self.__class__.__name__, "packs", packs)
-
-        # 🔄 Обновляем stickersets кэшем, чтобы .packs показала актуальные имена
-        self.stickersets.clear()
-        for pack in packs:
-            emoji = random.choice(self.emojies) if len(self.stickersets) >= len(self.emojies) else self.emojies[len(self.stickersets) + 1]
-            self.stickersets[pack["short_name"]] = {
-                "title": pack["title"],
-                "emoji": emoji,
-                "alias": None
-            }
-        await utils.answer(message, f"🔄 Стикерпаки синхронизированы! Найдено: {len(packs)} паков")
-
-    # ❌ Старый метод syncpacks через @stickers переименован для сохранности
-    async def syncpacks_legacy(self, message: Message):
-        """Legacy: синхронизация стикерпаков через @stickers (оставлено для совместимости)"""
-        q = 0
-
-        message = await utils.answer(message, self.strings("processing"))
-
-        async with self._client.conversation("@stickers") as conv:
-            m = await conv.send_message("/cancel")
-            r = await conv.get_response()
-
-            await m.delete()
-            await r.delete()
-
-            m = await conv.send_message("/packstats")
-            r = await conv.get_response()
-
-            packs = []
-            for row in [
-                [btn.text for btn in row.buttons] for row in r.reply_markup.rows
-            ]:
-                for btn in row:
-                    packs += [btn]
-                    if btn in self.stickersets:
-                        continue
-
-                    try:
-                        stickerset = await self._client(
-                            GetStickerSetRequest(
-                                stickerset=InputStickerSetShortName(btn),
-                                hash=round(time.time()),
-                            )
+                try:
+                    stickerset = await self._client(
+                        GetStickerSetRequest(
+                            stickerset=InputStickerSetShortName(btn),
+                            hash=round(time.time()),
                         )
-                    except Exception:
-                        continue
+                    )
+                except Exception:
+                    continue
 
-                    if len(self.stickersets) >= len(self.emojies):
-                        emoji = random.choice(self.emojies)
-                    else:
-                        emoji = self.emojies[len(self.stickersets) + 1]
+                if len(self.stickersets) >= len(self.emojies):
+                    emoji = random.choice(self.emojies)
+                else:
+                    emoji = self.emojies[len(self.stickersets) + 1]
 
-                    self.stickersets[btn] = {
-                        "title": stickerset.set.title,
-                        "emoji": emoji,
-                        "alias": None,
-                    }
+                self.stickersets[btn] = {
+                    "title": stickerset.set.title,
+                    "emoji": emoji,
+                    "alias": None,
+                }
 
-                    q += 1
+                q += 1
 
-            await m.delete()
-            await r.delete()
+        await m.delete()
+        await r.delete()
 
-            m = await conv.send_message("/cancel")
-            r = await conv.get_response()
+        m = await conv.send_message("/cancel")
+        r = await conv.get_response()
+        await m.delete()
+        await r.delete()
 
-            await m.delete()
-            await r.delete()
+    # Сохраняем в базу, чтобы .packs видел
+    packs_data = []
+    for shortname, info in self.stickersets.items():
+        packs_data.append({
+            "short_name": shortname,
+            "title": info.get("title")
+        })
+    self.db.set(self.__class__.__name__, "packs", packs_data)
 
-        d = 0
-        for pack in list(self.stickersets).copy():
-            if pack not in packs:
-                self.stickersets.pop(pack)
-                d += 1
-
-        await utils.answer(message, self.strings("stickersets_added").format(q, d))
+    await utils.answer(message, f"✅ Стикерпаки обновлены: {q} шт.")
 
     @loader.command(
         ru_doc="Показать доступные стикерпаки",
