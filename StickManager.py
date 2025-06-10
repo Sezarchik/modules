@@ -700,10 +700,27 @@ class StickManagerMod(loader.Module):
             img = new_img
 
         w, h = img.size
+        resample = getattr(Image, 'Resampling', Image).LANCZOS
         if w > h:
-            img = img.resize((512, int(h * (512 / w))), Image.ANTIALIAS)
+            img = img.resize((512, int(h * (512 / w))), resample)
         else:
-            img = img.resize((int((w * (512 / h))), 512), Image.ANTIALIAS)
+            img = img.resize((int((w * (512 / h))), 512), resample)
+
+        dst = io.BytesIO()
+        img.save(dst, "PNG")
+        mime = "image/png"
+
+        status = await utils.answer(status, self.strings("exporting"))
+
+        if only_bytes:
+            return dst.getvalue()
+
+        file = await self._client.upload_file(dst.getvalue())
+        file = InputMediaUploadedDocument(file, mime, [])
+        document = await self._client(UploadMediaRequest(InputPeerSelf(), file))
+        document = get_input_document(document)
+
+        return document
 
         dst = io.BytesIO()
         img.save(dst, "PNG")
