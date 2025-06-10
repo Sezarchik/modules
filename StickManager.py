@@ -1138,8 +1138,32 @@ class StickManagerMod(loader.Module):
         tr_doc="Sticker paketlerini @stickers ile senkronize et",
         hi_doc="स्टिकर सेट्स को @stickers से सिंक्रनाइज़ करें",
     )
-    async def syncpacks(self, message: Message):
-        """Sync existing stickersets with @stickers"""
+    async def syncpackscmd(self, message):
+        """Синхронизирует список доступных стикерпаков напрямую через Telegram API"""
+        from telethon.tl.functions.messages import GetAllStickersRequest, GetStickerSetRequest
+        from telethon.tl.types import InputStickerSetShortName
+
+        res = await self._client(GetAllStickersRequest(0))
+        packs = []
+
+        for pack in res.sets:
+            try:
+                full = await self._client(GetStickerSetRequest(InputStickerSetShortName(pack.short_name)))
+                packs.append({
+                    "id": pack.id,
+                    "access_hash": pack.access_hash,
+                    "short_name": pack.short_name,
+                    "title": full.set.title  # актуальное имя
+                })
+            except Exception:
+                continue
+
+        self.db.set(self.__class__.__name__, "packs", packs)
+        await utils.answer(message, f"🔄 Стикерпаки синхронизированы! Найдено: {len(packs)} паков")
+
+    # ❌ Старый метод syncpacks через @stickers переименован для сохранности
+    async def syncpacks_legacy(self, message: Message):
+        """Legacy: синхронизация стикерпаков через @stickers (оставлено для совместимости)"""
         q = 0
 
         message = await utils.answer(message, self.strings("processing"))
