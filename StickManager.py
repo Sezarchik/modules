@@ -1138,18 +1138,16 @@ class StickManagerMod(loader.Module):
         tr_doc="Sticker paketlerini @stickers ile senkronize et",
         hi_doc="स्टिकर सेट्स को @stickers से सिंक्रनाइज़ करें",
     )
-    async def syncpackscmd(self, message):
-        """Синхронизация стикерпаков через @stickers командой /packstats"""
-        from telethon.tl.functions.messages import GetStickerSetRequest
-        from telethon.tl.types import InputStickerSetShortName
-        import time
-    
+    async def syncpacks(self, message: Message):
+        """Sync existing stickersets with @stickers"""
         q = 0
-        message = await utils.answer(message, "🔄 Синхронизация через @stickers...")
+    
+        message = await utils.answer(message, self.strings("processing"))
     
         async with self._client.conversation("@stickers") as conv:
             m = await conv.send_message("/cancel")
             r = await conv.get_response()
+    
             await m.delete()
             await r.delete()
     
@@ -1193,10 +1191,17 @@ class StickManagerMod(loader.Module):
     
             m = await conv.send_message("/cancel")
             r = await conv.get_response()
+    
             await m.delete()
             await r.delete()
     
-        # Сохраняем в базу, чтобы .packs видел
+        d = 0
+        for pack in list(self.stickersets).copy():
+            if pack not in packs:
+                self.stickersets.pop(pack)
+                d += 1
+    
+        # 💾 Сохраняем в базу для восстановления при .packs
         packs_data = []
         for shortname, info in self.stickersets.items():
             packs_data.append({
@@ -1205,7 +1210,7 @@ class StickManagerMod(loader.Module):
             })
         self.db.set(self.__class__.__name__, "packs", packs_data)
     
-        await utils.answer(message, f"✅ Стикерпаки обновлены: {q} шт.")
+        await utils.answer(message, self.strings("stickersets_added").format(q, d))
 
     @loader.command(
         ru_doc="Показать доступные стикерпаки",
