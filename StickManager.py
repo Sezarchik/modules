@@ -1138,6 +1138,7 @@ class StickManagerMod(loader.Module):
         tr_doc="Sticker paketlerini @stickers ile senkronize et",
         hi_doc="स्टिकर सेट्स को @stickers से सिंक्रनाइज़ करें",
     )
+#   Привеееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееет
     async def syncpackscmd(self, message):
     """Синхронизация стикерпаков через @stickers командой packstats"""
     from telethon.tl.functions.messages import GetStickerSetRequest
