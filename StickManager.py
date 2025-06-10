@@ -1243,25 +1243,30 @@ class StickManagerMod(loader.Module):
         tr_doc="Mevcut sticker paketlerini göster",
         hi_doc="उपलब्ध स्टिकर सेट्स दिखाएं",
     )
-    async def packs(self, message: Message):
+    async def packscmd(self, message):
         """Short available stickersets"""
         if not self.stickersets:
-            await utils.answer(message, self.strings("no_stickersets"))
-            return
+            packs = self.db.get(self.__class__.__name__, "packs", [])
+            for pack in packs:
+                emoji = random.choice(self.emojies) if len(self.stickersets) >= len(self.emojies) else self.emojies[len(self.stickersets) + 1]
+                self.stickersets[pack["short_name"]] = {
+                    "title": pack["title"],
+                    "emoji": emoji,
+                    "alias": None
+                }
 
-        res = self.strings("packs_header")
+        if not self.stickersets:
+            return await utils.answer(message, self.strings("no_packs"))
+
+        text = ""
         for shortname, info in self.stickersets.items():
-            alias = (
-                f' (<code>{utils.escape_html(info["alias"])}</code>)'
-                if info["alias"]
-                else f" (<code>{utils.escape_html(shortname)}</code>)"
-            )
-            res += (
-                f"{info['emoji']} <b>{utils.escape_html(info['title'])}</b> <a"
-                f' href="https://t.me/addstickers/{shortname}">add</a>{alias}\n'
-            )
+            title = info.get("title") or shortname
+            emoji = info.get("emoji", "📦")
+            alias = f" ({info['alias']})" if info.get("alias") else ""
+            url = f"https://t.me/addstickers/{shortname}"
+            text += f"{emoji} {title} add ({url}){alias}\n"
 
-        await utils.answer(message, res)
+        await utils.answer(message, text)
 
     @loader.command(
         ru_doc="<алиас> [short_name] - Добавить или удалить алиас",
