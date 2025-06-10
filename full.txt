@@ -8,3 +8,4 @@ TTSave
 повтор
 Saver
 KeyboardSwitcher
+StickManager
