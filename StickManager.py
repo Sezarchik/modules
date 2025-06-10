@@ -1139,73 +1139,73 @@ class StickManagerMod(loader.Module):
         hi_doc="स्टिकर सेट्स को @stickers से सिंक्रनाइज़ करें",
     )
     async def syncpackscmd(self, message):
-    """Синхронизация стикерпаков через @stickers командой packstats"""
-    from telethon.tl.functions.messages import GetStickerSetRequest
-    from telethon.tl.types import InputStickerSetShortName
-    import time
-
-    q = 0
-    message = await utils.answer(message, "🔄 Синхронизация через @stickers...")
-
-    async with self._client.conversation("@stickers") as conv:
-        m = await conv.send_message("/cancel")
-        r = await conv.get_response()
-        await m.delete()
-        await r.delete()
-
-        m = await conv.send_message("/packstats")
-        r = await conv.get_response()
-
-        packs = []
-        for row in [
-            [btn.text for btn in row.buttons] for row in r.reply_markup.rows
-        ]:
-            for btn in row:
-                packs += [btn]
-                if btn in self.stickersets:
-                    continue
-
-                try:
-                    stickerset = await self._client(
-                        GetStickerSetRequest(
-                            stickerset=InputStickerSetShortName(btn),
-                            hash=round(time.time()),
+        """Синхронизация стикерпаков через @stickers командой /packstats"""
+        from telethon.tl.functions.messages import GetStickerSetRequest
+        from telethon.tl.types import InputStickerSetShortName
+        import time
+    
+        q = 0
+        message = await utils.answer(message, "🔄 Синхронизация через @stickers...")
+    
+        async with self._client.conversation("@stickers") as conv:
+            m = await conv.send_message("/cancel")
+            r = await conv.get_response()
+            await m.delete()
+            await r.delete()
+    
+            m = await conv.send_message("/packstats")
+            r = await conv.get_response()
+    
+            packs = []
+            for row in [
+                [btn.text for btn in row.buttons] for row in r.reply_markup.rows
+            ]:
+                for btn in row:
+                    packs += [btn]
+                    if btn in self.stickersets:
+                        continue
+    
+                    try:
+                        stickerset = await self._client(
+                            GetStickerSetRequest(
+                                stickerset=InputStickerSetShortName(btn),
+                                hash=round(time.time()),
+                            )
                         )
-                    )
-                except Exception:
-                    continue
-
-                if len(self.stickersets) >= len(self.emojies):
-                    emoji = random.choice(self.emojies)
-                else:
-                    emoji = self.emojies[len(self.stickersets) + 1]
-
-                self.stickersets[btn] = {
-                    "title": stickerset.set.title,
-                    "emoji": emoji,
-                    "alias": None,
-                }
-
-                q += 1
-
-        await m.delete()
-        await r.delete()
-
-        m = await conv.send_message("/cancel")
-        r = await conv.get_response()
-        await m.delete()
-        await r.delete()
-
-    # Сохраняем в базу, чтобы .packs видел
-    packs_data = []
-    for shortname, info in self.stickersets.items():
-        packs_data.append({
-            "short_name": shortname,
-            "title": info.get("title")
-        })
-    self.db.set(self.__class__.__name__, "packs", packs_data)
-
-    await utils.answer(message, f"✅ Стикерпаки обновлены: {q} шт.")
+                    except Exception:
+                        continue
+    
+                    if len(self.stickersets) >= len(self.emojies):
+                        emoji = random.choice(self.emojies)
+                    else:
+                        emoji = self.emojies[len(self.stickersets) + 1]
+    
+                    self.stickersets[btn] = {
+                        "title": stickerset.set.title,
+                        "emoji": emoji,
+                        "alias": None,
+                    }
+    
+                    q += 1
+    
+            await m.delete()
+            await r.delete()
+    
+            m = await conv.send_message("/cancel")
+            r = await conv.get_response()
+            await m.delete()
+            await r.delete()
+    
+        # Сохраняем в базу, чтобы .packs видел
+        packs_data = []
+        for shortname, info in self.stickersets.items():
+            packs_data.append({
+                "short_name": shortname,
+                "title": info.get("title")
+            })
+        self.db.set(self.__class__.__name__, "packs", packs_data)
+    
+        await utils.answer(message, f"✅ Стикерпаки обновлены: {q} шт.")
 
     @loader.command(
         ru_doc="Показать доступные стикерпаки",
