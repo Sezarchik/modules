@@ -1404,6 +1404,7 @@ class StickManagerMod(loader.Module):
 
                 if (
                     "The sticker set is gon" not in r.raw_text
+                    and "Набор стикеров был удалён." not in r.raw_text
                     and "Набор стикеров был удален." not in r.raw_text
                 ):
                     raise HikariException(
