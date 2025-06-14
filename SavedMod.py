@@ -3,12 +3,12 @@ from .. import loader, utils
 
 @loader.tds
 class SavedMod(loader.Module):
-    """Соxранятель в избранное"""
+    """Соxраняет исчезающие и одноразовые медиа в Избранное"""
     strings = {"name": "SavedMessages", "to": "me"}
 
     @loader.unrestricted
     async def savedcmd(self, message):
-        """.saved реплай на медиа"""
+        """.saved реплай на медиа (в т.ч. одноразовое)"""
         await message.delete()
         reply = await message.get_reply_message()
         name = utils.get_args_raw(message)
@@ -16,19 +16,26 @@ class SavedMod(loader.Module):
         if not reply or not reply.media:
             return
 
-        is_disappearing = getattr(reply.media, "ttl_seconds", None)
-        is_view_once = getattr(reply.media, "view_once", False)
+        # Попытка получить содержимое
+        try:
+            # Даже если file=None — скачиваем
+            file_bytes = await reply.download_media(bytes)
+            if not file_bytes:
+                await message.respond("⚠️ Не удалось скачать медиа.")
+                return
 
-        # Если исчезающее или разовый просмотр — загрузим вручную
-        if is_disappearing or is_view_once:
-            # Скачиваем медиа как байты
-            file = await reply.download_media(bytes)
-            file = io.BytesIO(file)
-            # Имя файла: либо аргумент, либо auto
-            ext = reply.file.ext if reply.file else ".media"
+            file = io.BytesIO(file_bytes)
+
+            # Определим расширение
+            ext = ".media"
+            if reply.file and reply.file.ext:
+                ext = reply.file.ext
+            elif reply.document:
+                ext = "." + reply.document.mime_type.split("/")[-1]
+
             file.name = name or f"{reply.sender_id}{ext}"
             file.seek(0)
+
             await message.client.send_file(self.strings["to"], file)
-        else:
-            # Обычное медиа — просто форвардим
-            await reply.forward_to(self.strings["to"])
+        except Exception as e:
+            await message.respond(f"❌ Ошибка при сохранении: {e}")
