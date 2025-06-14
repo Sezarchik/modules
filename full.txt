@@ -10,3 +10,4 @@ Saver
 KeyboardSwitcher
 StickManager
 Notes
+SavedMod
