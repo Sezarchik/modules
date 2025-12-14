@@ -11,3 +11,4 @@ KeyboardSwitcher
 StickManager
 Notes
 SavedMod
+Conthelper
