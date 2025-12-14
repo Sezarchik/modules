@@ -61,7 +61,7 @@ class ConthelperMod(loader.Module):
                 return await message.edit("<b>Who I must report?</b>")
 
         await message.client(functions.messages.ReportSpamRequest(peer=user.id))
-        await message.edit("<b>You get report for spam!</b>")
+        await utils.answer(message, "<b>You get report for spam!</b>")
 
     async def blockcmd(self, message):
         """Use: .block to block this user."""
@@ -125,9 +125,9 @@ class ConthelperMod(loader.Module):
         args = utils.get_args_raw(message)
         reply = await message.get_reply_message()
         if not args:
-            return await message.edit("<b>Where args?.</b>")
+            return await utils.answer(message, "<b>Where args?.</b>")
         if not reply:
-            return await message.edit("<b>Where reply?</b>")
+            return await utils.answer(message, "<b>Where reply?</b>")
         else:
             user = await message.client.get_entity(reply.sender_id)
         try:
@@ -140,10 +140,10 @@ class ConthelperMod(loader.Module):
                     add_phone_privacy_exception=False,
                 )
             )
-            await message.edit(
+            await utils.answer(message,
                 f"<code>{user.id}</code> added to contacts <code>{args}</code>"
             )
         except:
-            return await message.edit(
+            return await utils.answer(message,
                 "<b>Something went wrong (come up with different reasons).</b>"
             )
