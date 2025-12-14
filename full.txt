@@ -12,4 +12,4 @@ StickManager
 Notes
 SavedMod
 Conthelper
-Art
+Arts
